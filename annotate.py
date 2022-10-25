@@ -2,9 +2,14 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+import neurokit2 as nk
+from ecgdetectors import Detectors
 
-patient_num = 2
-plots_on = False
+
+
+patient_num = 1
+plots_on = True
 
 
 
@@ -20,8 +25,24 @@ patient_prob = diagnosis[patient_num]
 probs_list = list(patient_prob)
 print(probs_list)
 
+################################################ experimental -- neurokit2
+# Retrieve ECG data from data folder
+#ecg_signal = nk.data(dataset='Patient_ECGs/patient2' + str(patient_num))
+# Extract R-peaks locations
+#_, rpeaks = nk.ecg_peaks(ecg_signal, sampling_rate=1000)
+#plot = nk.events_plot(rpeaks['ECG_R_Peaks'], ecg_signal)
+##############################################################################
 
+################################################ experimental -- ecgdetectors
+fs=100 # sample freq
+detectors = Detectors(fs)
+heartbeat = data
+r_peaks_pan = detectors.swt_detector(heartbeat.iloc[:,5][0:4000])
+r_peaks_pan= np.asarray(r_peaks_pan)
 
+plt.plot(heartbeat.iloc[:,2][0:4000])
+plt.plot(r_peaks_pan,heartbeat.iloc[:,2][0:4000][r_peaks_pan], 'ro')
+##############################################################################
 
 lead_0 = list(data["0"])
 lead_1 = list(data["1"])
@@ -38,8 +59,8 @@ lead_11 = list(data["11"])
 
 if plots_on == True:
     time = list(range(0, len(lead_0)))
-    fig = plt.figure(figsize=(18, 12))
-    axes = fig.subplots(nrows=6, ncols=2)
+    #fig = plt.figure(figsize=(18, 12))
+    fig, axes = plt.subplots(nrows=6, ncols=2, figsize=(18,12))
 
     axes[0,0].plot(time, lead_0, label='lead_0', color = 'red')
     axes[0,0].set_title('Lead 0')
