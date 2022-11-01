@@ -2,14 +2,14 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
+#import numpy as np
 import neurokit2 as nk
-from ecgdetectors import Detectors
+#from ecgdetectors import Detectors
 
 ### Takes in the location of the peaks, and calculates the heart rate
 ### Combining this with the number of pioints can easily tell us the heart rate
 ### We can easily show two abnormalities now
-def find_RR_distance(data):
+def find_heart_rate(data):
     avg = data[1] - data[0]
     if (len(data) < 3):
         return avg
@@ -17,38 +17,133 @@ def find_RR_distance(data):
     for x in range(1,len(data) - 1):
         newDist = data[x + 1] - data[x]
         avg = (avg + newDist)/2
-        
-    return avg
+
+    ans = (1/avg)*(400)*(60)
+    return ans
+
+def PR_interval(Ploc, Rloc):
+    dist = 0
+    for i in range(0,len(Ploc)):
+        for j in range(0,len(Rloc)):
+            if (Rloc[j] > Ploc[i]):
+                dist += Rloc[j] - Ploc[i]
+                break
+
+    avg_dist = dist/len(Ploc)
+
+    return avg_dist/400
+
+'''
+This function needs to be complete. It takes in the gold standard results, and then confirm if they
+exist, and returns whether or not it found them
+'''
+def arrythmias_to_test(data, ECG):
+    if (data[0] == 1):
+        # do work
+        av_block(ECG)
+    #if (data[1] == 1):
+        # do work
+    #if (data[2] == 1):
+        # do work
+    if (data[3] == 1):
+        # do work
+        print("sinus bracc: " + str(sinus_brac(ECG)))
+    #if (data[4] == 1):
+        # do work
+    if (data[5] == 1):
+        # do work
+        print("sinus tac: " + str(sinus_tac(ECG)))
+
+
+def sinus_brac(ECG):
+    # Extract R-peaks locations
+    clean_ecg = data.iloc[:,1][0:4000]
+    R_locations, R_info_dict = nk.ecg_peaks(clean_ecg, sampling_rate=400)
+    if (find_heart_rate(R_info_dict['ECG_R_Peaks']) < 60):
+        return 1
+    else:
+        return 0
+
+def sinus_tac(ECG):
+    # Extract R-peaks locations
+    clean_ecg = data.iloc[:,1][0:4000]
+    R_locations, R_info_dict = nk.ecg_peaks(clean_ecg, sampling_rate=400)
+    if (find_heart_rate(R_info_dict['ECG_R_Peaks']) > 100):
+        return 1
+    else:
+        return 0
+
+def av_block(ECG):
+    # Extract R-peaks locations
+    clean_ecg = data.iloc[:,1][0:4000]
+    R_locations, R_info_dict = nk.ecg_peaks(clean_ecg, sampling_rate=400)
+    # Extract P-peak locations
+    PQST_locations, PQST = nk.ecg_delineate(clean_ecg)
+    P_locations = PQST['ECG_P_Peaks']
+    #print(R_info_dict['ECG_R_Peaks'])
+    #print(P_locations)
+    plot = nk.events_plot([R_info_dict['ECG_R_Peaks'], P_locations], clean_ecg)
+    result = PR_interval(P_locations, R_info_dict['ECG_R_Peaks'])
+    print(result)
+
+
+    return 0
+
+def right_block(ECG):
+    return 0
+
+def left_block(ECG):
+    return 0
+
+def atrial_fib(ECG):
+    return 0
 
 
 
-patient_num = 2
+### Code Control
+patient_num = 13
 plots_on = True
 
 
 
-
+### Set up patient data
 patient_ecg = 'Patient_ECGs/patient' + str(patient_num) + '.csv'
-classifications = 'Our_Files/ecg_output.csv'
-#correct_dianosis = 'Our_Files/gold_standard.csv'   # Uncomment when able to get updated repo
 data = pd.read_csv(patient_ecg)
 
+### Extract correct diagnosis
+gold_standard = 'Our_Files/gold_standard.csv'
+correct_diagnosis = pd.read_csv(gold_standard)
+correct_diagnosis = correct_diagnosis.T
+gold_standard_result = correct_diagnosis[patient_num - 1]
+diagnosis_list = list(gold_standard_result)
+print(diagnosis_list)
 
+
+
+### Extract Model Output of Probabilities
+classifications = 'Our_Files/ecg_output.csv'
 diagnosis = pd.read_csv(classifications)
 diagnosis = diagnosis.T
 patient_prob = diagnosis[patient_num]
 probs_list = list(patient_prob)
 print(probs_list)
 
+
+### Test for Arrythmias
+arrythmias_to_test(diagnosis_list, data)
+
+
 ################################################ experimental -- neurokit2
 # Show All wave annotation
 # Retrieve ECG data from data folder
-# Use given function to get cleaner signal
-#clean_ecg = nk.ecg_clean(data.iloc[:,5][0:4000])
-clean_ecg = data.iloc[:,1][0:5000]
+#temp = data.iloc[:,1][0:4000]
+#clean_ecg = nk.ecg_clean(temp, sampling_rate=400)
+
 # Extract R-peaks locations
-R_locations, R_info_dict = nk.ecg_peaks(clean_ecg, sampling_rate=400)
+#R_locations, R_info_dict = nk.ecg_peaks(clean_ecg, sampling_rate=400)
 # Extract PQST Locations
+
+### This plot only the R peak locations
 '''
 PQST_locations, PQST = nk.ecg_delineate(clean_ecg, 
                                  R_info_dict['ECG_R_Peaks'], 
@@ -57,21 +152,23 @@ PQST_locations, PQST = nk.ecg_delineate(clean_ecg,
                                  show=True, 
                                  show_type='peaks')
                                  '''
-
+'''
+## This plots all the peaks locations of interst
 PQST_locations, PQST = nk.ecg_delineate(clean_ecg)
-## Plot information
 
 plot = nk.events_plot([R_info_dict['ECG_R_Peaks'],
                         PQST['ECG_T_Peaks'], 
                         PQST['ECG_P_Peaks'], 
                         PQST['ECG_Q_Peaks'], 
                         PQST['ECG_S_Peaks']], clean_ecg)
-                        
 
+plot = nk.events_plot([R_info_dict['ECG_R_Peaks'],
+                        PQST['ECG_P_Peaks']], clean_ecg)
 
+'''
 
 #Find RR_distance
-print(find_RR_distance(R_info_dict['ECG_R_Peaks']))
+#print(find_heart_rate(R_info_dict['ECG_R_Peaks']))
 ##############################################################################
 
 ################################################ experimental -- ecgdetectors
@@ -131,19 +228,3 @@ if plots_on == True:
 
     plt.tight_layout()
     plt.show()
-
-classification_max = probs_list.index(max(probs_list))
-print(classification_max)
-
-if(max == 0): #1dAvB
-    pass
-if(max == 1): #RBBB
-    pass
-if(max == 2): #LBBB
-    pass
-if(max == 3): #bradycardia
-    pass
-if(max == 4): #Atrial Fibrilation
-    pass
-if(max == 5): #Tachycardia
-    pass
