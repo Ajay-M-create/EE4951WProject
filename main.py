@@ -8,36 +8,48 @@ from ecgdetectors import Detectors
 
 
 ### Code Control
-patient_num = 24
-plots_on = False
+#patient_num = range(1,100)
+patient_num = [19]
+plots_on = True
+
+
+for i in patient_num:
+    ### Set up patient data
+    patient_ecg = 'Patient_ECGs/patient' + str(i) + '.csv'
+    data = pd.read_csv(patient_ecg)
+
+    ### Extract correct diagnosis
+    gold_standard = 'Our_Files/gold_standard.csv'
+    correct_diagnosis = pd.read_csv(gold_standard)
+    correct_diagnosis = correct_diagnosis.T
+    gold_standard_result = correct_diagnosis[i - 1]
+    diagnosis_list = list(gold_standard_result)
+
+    diagnosis_list = [1,0,1,0,0,0]
+
+    print(diagnosis_list)
 
 
 
-### Set up patient data
-patient_ecg = 'Patient_ECGs/patient' + str(patient_num) + '.csv'
-data = pd.read_csv(patient_ecg)
+    ### Extract Model Output of Probabilities
+    classifications = 'Our_Files/ecg_output.csv'
+    diagnosis = pd.read_csv(classifications)
+    diagnosis = diagnosis.T
+    patient_prob = diagnosis[i]
+    probs_list = list(patient_prob)
 
-### Extract correct diagnosis
-gold_standard = 'Our_Files/gold_standard.csv'
-correct_diagnosis = pd.read_csv(gold_standard)
-correct_diagnosis = correct_diagnosis.T
-gold_standard_result = correct_diagnosis[patient_num - 1]
-diagnosis_list = list(gold_standard_result)
-print(diagnosis_list)
+    for x in range(6):
+        if (probs_list[x] > 0.15):
+            probs_list[x] = 1
+        else:
+            probs_list[x] = 0
 
-
-
-### Extract Model Output of Probabilities
-classifications = 'Our_Files/ecg_output.csv'
-diagnosis = pd.read_csv(classifications)
-diagnosis = diagnosis.T
-patient_prob = diagnosis[patient_num]
-probs_list = list(patient_prob)
-print(probs_list)
-
-
-### Test for Arrythmias and Visualize
-arrythmias_to_test(diagnosis_list, data)
+    print(probs_list)
+    if (probs_list != diagnosis_list):
+        print("patient #" + str(i+1))
+    ### Test for Arrythmias and Visualize
+    print("patient #" + str(i+1))
+    arrythmias_to_test(probs_list, diagnosis_list, data)
 
 
 ##############################################################################
