@@ -109,18 +109,25 @@ def visualizeBBB(data, Q, S, ECG, fig, axQRS, message):
     Lead6 = ECG.iloc[:,10][0:4000]
     time = list(range(0, len(Lead6)))
     graphic = axQRS.plot(time, Lead6, label='V1', color = 'orange')
-    axQRS.annotate(message + "QRS Interval: "+str(round(data,2))+" sec", xy=(Q[2]-25,0), xycoords='data', xytext=(S[2]+25, 0), textcoords='data', arrowprops=dict(arrowstyle="|-|,widthA=2.0,widthB=2.0", connectionstyle="arc3"))
-    #axQRS.set_ylim(-1.5,1.5)
+    axQRS.annotate(message + "QRS Interval: "+str(round(data,2))+" sec", xy=(Q[2]-25,Lead6[Q[2]]/2), xycoords='data', xytext=(S[2]+25, Lead6[Q[2]]/2), textcoords='data', arrowprops=dict(arrowstyle="|-|,widthA=2.0,widthB=2.0", connectionstyle="arc3"))
+    #axQRS.set_ylim(-2,1.5)
     axQRS.set_xlim(400,3000)
     print(Q)
     print(S)
 
 #still fixing
-def visualizeAtrFib(data, P, T, ECG, fig, axTP, message):
+def visualizeAtrFib(data, P, T, R, ECG, fig, axTP, message):
     LeadTwo = ECG.iloc[:,1][0:4000]
     time = list(range(0, len(LeadTwo)))
     graphic = axTP.plot(time, LeadTwo, label='V1', color = 'orange')
-    axTP.annotate(message + "TP Interval is spiky, RR distances are inconsistent", xy=(T[2]-25,0), xycoords='data', xytext=(P[2]+25, 0), textcoords='data', arrowprops=dict(arrowstyle="|-|,widthA=2.0,widthB=2.0", connectionstyle="arc3"))
+    axTP.annotate(message + "TP Interval is spiky", xy=(T[2]-25,0), xycoords='data', xytext=(P[2]+25, 0), textcoords='data', arrowprops=dict(arrowstyle="|-|,widthA=2.0,widthB=2.0", connectionstyle="arc3"))
+    #axTP.annotate(message + "TP Interval is spiky, RR distances are inconsistent", xy=(R[1]-25,0.5), xycoords='data', xytext=(R[2]+25, 0.5), textcoords='data', arrowprops=dict(arrowstyle="|-|,widthA=2.0,widthB=2.0", connectionstyle="arc3"))
+
+    axTP.annotate("", xy=(R[1],0.5), xycoords='data', xytext=(R[3], 0.5), textcoords='data', arrowprops=dict(arrowstyle="|-|,widthA=2.0,widthB=2.0", connectionstyle="arc3"))
+    axTP.annotate("", xy=(R[2],0.5), xycoords='data', xytext=(R[4], 0.5), textcoords='data', arrowprops=dict(arrowstyle="|-|,widthA=2.0,widthB=2.0", connectionstyle="arc3"))
+    axTP.annotate("RR distances are inconsistent", xy=(R[3],0.5), xycoords='data', xytext=(R[5], 0.5), textcoords='data', arrowprops=dict(arrowstyle="|-|,widthA=2.0,widthB=2.0", connectionstyle="arc3"))
+
+
     #axQRS.set_ylim(-1.5,1.5)
     axTP.set_xlim(400,3000)
     print(T)
@@ -133,7 +140,7 @@ exist, and returns whether or not it found them
 '''
 def arrythmias_to_test(dataModel, dataGold, ECG):
     fig = plt.figure()
-    ax = fig.subplots(sum(dataModel))
+    ax = fig.subplots(max(sum(dataModel),sum(dataGold),2))
     i = 0
     """
     ### AV Block
@@ -314,15 +321,21 @@ def arrythmias_to_test(dataModel, dataGold, ECG):
 
     ### A-Fib
     if (dataGold[4] != dataModel[4]):
+        TP_interval, T_loc, P_loc = atrial_fib(ECG)
+        rate, R_loc = sinus_brac(ECG)
         if (dataGold[4] == 1):
-            print("Model missed the afib")
+            message = "Model missed the afib"
+            
         elif (dataGold[4] == 0):
-            print("Model incorrectly predicted afib")
+             message = "Model incorrectly predicted afib"
+        print(message)
+        visualizeAtrFib(TP_interval, T_loc, P_loc, R_loc["ECG_R_Peaks"], ECG, fig, ax[i], message)
     elif (dataGold[4] == 1):
         message = ""
         TP_interval, T_loc, P_loc = atrial_fib(ECG)
         print("Correct TP Interval: ", str(TP_interval))
-        visualizeAtrFib(TP_interval, T_loc, P_loc, ECG, fig, ax[i], message)
+        rate, R_loc = sinus_brac(ECG)
+        visualizeAtrFib(TP_interval, T_loc, P_loc, R_loc["ECG_R_Peaks"], ECG, fig, ax[i], message)
         i += 1
         
     '''
@@ -444,7 +457,7 @@ def atrial_fib(ECG):
     # Extract P-peak locations
     PQST_locations, PQST = nk.ecg_delineate(clean_ecg, R_info_dict, sampling_rate=400, method='dwt')
     P_locations = PQST['ECG_P_Peaks']
-    T_locations = PQST['ECT_T_Peaks']
+    T_locations = PQST['ECG_T_Peaks']
     #print(R_info_dict['ECG_R_Peaks'])
     #print(P_locations)
     #plot = nk.events_plot([R_info_dict['ECG_R_Peaks'], P_locations, PQST['ECG_Q_Peaks'], PQST['ECG_S_Peaks'], PQST['ECG_T_Peaks']], clean_ecg) 
@@ -454,4 +467,3 @@ def atrial_fib(ECG):
         return result, T_locations, P_locations
     else:
         return result, T_locations, P_locations
-

@@ -1,4 +1,5 @@
-from annotate import *
+#from annotate import *
+from annotateTest import *
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +10,7 @@ from ecgdetectors import Detectors
 
 ### Code Control
 #patient_num = range(1,100)
-patient_num = [19]
+patient_num = [16]
 plots_on = True
 
 
@@ -24,9 +25,6 @@ for i in patient_num:
     correct_diagnosis = correct_diagnosis.T
     gold_standard_result = correct_diagnosis[i - 1]
     diagnosis_list = list(gold_standard_result)
-
-    diagnosis_list = [1,0,1,0,0,0]
-
     print(diagnosis_list)
 
 
