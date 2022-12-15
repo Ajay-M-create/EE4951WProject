@@ -1,8 +1,11 @@
 Link to Machine Learning Model: https://github.com/antonior92/automatic-ecg-diagnosis 
 
-Need to install
+Need to install (pip install)
 
 1) pandas
 2) matplotlib.pyploy
 3) neurokit2
 4) pandas
+
+Code is start in main.py
+python3 main.py
