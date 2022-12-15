@@ -7,5 +7,7 @@ Need to install (pip install)
 3) neurokit2
 4) pandas
 
-Code is start in main.py
+Code is started in main.py
 python3 main.py
+
+Right now, the code is set up to turn through about 30 ECGs, and essentially be a slide show that changes every 5 seconds. 
