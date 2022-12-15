@@ -15,4 +15,4 @@ annotateTest.py: The actual meat of the code where python libraries are leverage
 Patient_ECGs folder: Contains 800+ patient ECGs reserved as test data for the trained ML model.
 Our_Files: Contains two files called ecg_output.csv and gold_standard.csv. ecg_output.csv has a list of arrhythmia prescence probabilities as an array where each array element indicates the probability that each arrhythmia is present. the array order is delineated at the top. gold_standard.csv contains the actual arrhythmias present in each ECG according to several health professionals with all confirm the result.
 
-All code is available on GitHub.
+All code is available on GitHub here: https://github.com/Ajay-M-create/EE4951WProject
