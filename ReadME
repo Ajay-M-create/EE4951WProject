@@ -2,12 +2,13 @@ Link to Machine Learning Model: https://github.com/antonior92/automatic-ecg-diag
 
 Need to install (pip install)
 
-1) pandas
-2) matplotlib.pyploy
+1) numpy
+2) matplotlib.pyplot
 3) neurokit2
 4) pandas
+5) math
 
-Code is started in main.py
-python3 main.py
+Code begins in main.py
+Run with: python3 main.py
 
-Right now, the code is set up to turn through about 30 ECGs, and essentially be a slide show that changes every 5 seconds. 
+Right now, the code is set up to turn through about 30 ECGs, and is a slide show that updates every 5 seconds.
